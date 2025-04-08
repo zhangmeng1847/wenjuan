@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理人员管理潜能测评</title>
+    <style>
+        /* 保持原有样式不变 */
+        body {
+            font-family: -apple-system, sans-serif;
+            padding: 15px;
+            background: #f5f5f5;
+        }
+
+        .question {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .options {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px 20px;
+            width: 85%;
+            max-width: 320px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 8px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
+        }
+
+        .modal-content input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-content button:hover {
+            background: #218838;
+        }
+
+        /* 添加按钮交互效果 */
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 完善弹窗样式 */
+        .modal-content input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .modal-content button {
+            width: 100%;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* 新增结果页样式 */
+        .result-container {
+            display: none;
+        }
+
+        .score-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .total-score {
+            background: linear-gradient(135deg, #6B46C1, #4299E1);
+            color: white;
+            text-align: center;
+        }
+
+        .dimension-score {
+            background: #fff;
+        }
+
+        .score-label {
+            font-size: 16px;
+            color: #000000;
+            margin-bottom: 8px;
+        }
+
+        .score-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .evaluation {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        /* 评价颜色方案 */
+        .excellent {
+            background: #48BB78;
+            color: white;
+        }
+
+        .good {
+            background: #68D391;
+            color: white;
+        }
+
+        .normal {
+            background: #F6E05E;
+            color: #333;
+        }
+
+        .poor {
+            background: #FC8181;
+            color: white;
+        }
+
+        .weak {
+            background: #F56565;
+            color: white;
+        }
+
+        /* 新增顶部文本样式 */
+        .header-text {
+            /* background: #fff; */
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: left;
+            /* 确保文本居左 */
+        }
+
+        .section-title {
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header-text" id="headerText">
+        <h2 class="section-title">一、指导语</h2>
+        请你如实地回答下列60道测试题，假设题目中的内容是一般情况下或是大多数情况下发生的，请只用“是”或“否”来回答。
+        <h2 class="section-title">二、测试题</h2>
+    </div>
+    <div id="questions"></div>
+    <button class="submit-btn" id="submitButton">提交答卷</button>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <input type="text" id="staffId" placeholder="请输入4位工号" maxlength="4">
+            <button onclick="submitAnswers()">确认提交</button>
+        </div>
+    </div>
+
+    <!-- 新增结果容器 -->
+    <div class="result-container" id="resultContainer">
+        <div class="score-card total-score">
+            <div class="score-label">综合管理潜能得分</div>
+            <div class="score-value" id="totalScore">0</div>
+            <div class="evaluation" id="totalEvaluation"></div>
+        </div>
+
+        <div class="score-card dimension-score">
+            <div class="score-label">🗣️ 指挥他人能力</div>
+            <div class="score-value" id="commandScore">0</div>
+            <div class="evaluation" id="commandEvaluation"></div>
+        </div>
+
+        <div class="score-card dimension-score">
+            <div class="score-label">🌟 独立性</div>
+            <div class="score-value" id="independenceScore">0</div>
+            <div class="evaluation" id="independenceEvaluation"></div>
+        </div>
+
+        <div class="score-card dimension-score">
+            <div class="score-label">😊 性格倾向</div>
+            <div class="score-value" id="personalityScore">0</div>
+            <div class="evaluation" id="personalityEvaluation"></div>
+        </div>
+
+        <div class="score-card dimension-score">
+            <div class="score-label">🤝 社会性反应</div>
+            <div class="score-value" id="socialScore">0</div>
+            <div class="evaluation" id="socialEvaluation"></div>
+        </div>
+    </div>
+
+    <script>
+        // 更新后的题目数据
+        const questions = [
+            { id: 1, text: "买东西喜欢讨价还价吗？" },
+            { id: 2, text: "曾在某些聚会中担任过主持人吗？" },
+            { id: 3, text: "在就餐或买东西时，是否曾指责过服务员服务不佳？" },
+            { id: 4, text: "曾经率先发起组织聚会或团体活动吗?" },
+            { id: 5, text: "曾使气氛沉闷的场合变得生气勃勃吗？" },
+            { id: 6, text: "在大众面前讲话感到困难吗？" },
+            { id: 7, text: "与陌生人说话感到困难吗？" },
+            { id: 8, text: "第一次做某件事时会觉得紧张吗？" },
+            { id: 9, text: "常常因犹豫不决而坐失良机吗？" },
+            { id: 10, text: "参加聚会时常常告诫自己不要过于活跃吗？" },
+            { id: 11, text: "热衷于有创造性的工作时，即使没有朋友支持，也能独立进行吗？" },
+            { id: 12, text: "让你在跳舞和演戏中选择，你会选择跳舞吗？" },
+            { id: 13, text: "与其他人共同负责，还不如个人负责更好吗？" },
+            { id: 14, text: "受到打击时，宁愿自己个人承担吗？" },
+            { id: 15, text: "做事时更喜欢一个人去完成吗？" },
+            { id: 16, text: "写信时需要重新抄写一遍吗？" },
+            { id: 17, text: "和多数人相处比一个人独处更愉快吗？" },
+            { id: 18, text: "虽是正当的事，但遭到嘲笑会觉得没趣吗？" },
+            { id: 19, text: "遇到令人烦恼的事，希望有他人在你身旁吗？" },
+            { id: 20, text: "更喜欢运动而不太喜欢看书吗？" },
+            { id: 21, text: "很少注意他人的脸色吗？" },
+            { id: 22, text: "你已买下的东西，过后常会去退换吗？" },
+            { id: 23, text: "是否很少担心将来的事？" },
+            { id: 24, text: "你充满自信吗？" },
+            { id: 25, text: "做没有兴趣的工作时，不需要别人鼓动吗？" },
+            { id: 26, text: "事事都有决断力吗？" },
+            { id: 27, text: "被人嘲笑时，自己也笑得出来吗？" },
+            { id: 28, text: "虽然被他人反对，但还会坚持己见吗？" },
+            { id: 29, text: "发生了意外事件时，你会立即行动、出力协助吗？" },
+            { id: 30, text: "你非常喜欢与众人交往吗？" },
+            { id: 31, text: "有过羞愧到无地自容的经历吗？" },
+            { id: 32, text: "是否一直在积蓄财产？" },
+            { id: 33, text: "经常反思自己的错误吗？" },
+            { id: 34, text: "常常因为迷惑而变更正在进行的事情吗？" },
+            { id: 35, text: "与上司相处会觉得拘束吗" },
+            { id: 36, text: "遇到挫折会很快泄气吗？" },
+            { id: 37, text: "你是一个十分敏感的人吗？" },
+            { id: 38, text: "工作时有旁观者会觉得不安吗？" },
+            { id: 39, text: "在开会时常会词不达意、言不由衷或一言不发吗？" },
+            { id: 40, text: "会因为小事受挫而意志消沉吗？" },
+            { id: 41, text: "大家聚集一堂，你会感到快乐吗？" },
+            { id: 42, text: "你讲话时，别人会用心听吗？" },
+            { id: 43, text: "你愿意承认自己的错误吗？" },
+            { id: 44, text: "朋友会来征求你的意见吗？" },
+            { id: 45, text: "是否常常不原谅他人的过错？" },
+            { id: 46, text: "常常设法提起他人感兴趣的话题吗？" },
+            { id: 47, text: "对大部分事情，可以按自己的想法表达出来吗？" },
+            { id: 48, text: "大家讨论问题时，是否站在团队的立场上听取个人的意见？" },
+            { id: 49, text: "在决策家庭事务或工作问题之前，是否设法了解大家的意见？" },
+            { id: 50, text: "你认为所谓意见主要是由经验造成的吗" },
+            { id: 51, text: "假如你改变了观点，旁人会认为你是弱者吗？" },
+            { id: 52, text: "受到别人批评时会感到不自在吗？" },
+            { id: 53, text: "与他人交谈时，你会不注意对方说话吗？" },
+            { id: 54, text: "他人不同意你的意见会令你不高兴吗？" },
+            { id: 55, text: "你是否限制交朋友的圈子？" },
+            { id: 56, text: "寄出信后常会后悔吗？" },
+            { id: 57, text: "常常在别人背后说一些不便让其本人知道的话吗？" },
+            { id: 58, text: "对一些需要对质的问题不希望当面回答，怕别人指责你的错误吗？" },
+            { id: 59, text: "在商量时常常与人争论，或采用命令式口吻吗？" },
+            { id: 60, text: "你能承认你的辩论对手也有道理吗？" }
+        ];
+
+        // 渲染问题列表
+        function renderQuestions() {
+            const container = document.getElementById('questions');
+            questions.forEach(q => {
+                const div = document.createElement('div');
+                div.className = 'question';
+                div.innerHTML = `
+                    <div>${q.id}. ${q.text}</div>
+                    <div class="options">
+                        <label><input type="radio" name="q${q.id}" value="yes"> 是</label>
+                        <label><input type="radio" name="q${q.id}" value="no"> 否</label>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        // 显示弹窗
+        function showModal() {
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        // 绑定事件（新增事件监听）
+        document.getElementById('submitButton').addEventListener('click', showModal);
+
+        // 保持原有计分逻辑和提交逻辑不变
+        // 完整实现计分函数
+        function calculateScores() {
+            let total = 0;
+            const dimensions = {
+                command: 0,   // 指挥能力（1-10）
+                independence: 0, // 独立性（11-20）
+                personality: 0, // 性格（21-40）
+                social: 0       // 社会性（41-60）
+            };
+
+            questions.forEach(q => {
+                const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+                const answer = selected ? selected.value : null;
+
+                // 计分规则判断
+                let score = 0;
+                if (!selected) {
+                    score = 1;
+                } else {
+                    // 正向计分题组
+                    const positiveGroups = [
+                        [1, 5],    // 1-5题
+                        [11, 15],  // 11-15题
+                        [21, 30],  // 21-30题
+                        [41, 50]   // 41-50题
+                    ];
+
+                    // 判断是否在正向计分组
+                    const isPositive = positiveGroups.some(([start, end]) =>
+                        q.id >= start && q.id <= end
+                    );
+
+                    if (isPositive) {
+                        score = answer === 'yes' ? 2 : 0;
+                    } else {
+                        score = answer === 'no' ? 2 : 0;
+                    }
+                }
+
+                // 维度计算
+                if (q.id <= 10) {
+                    dimensions.command += score;
+                } else if (q.id <= 20) {
+                    dimensions.independence += score;
+                } else if (q.id <= 40) {
+                    dimensions.personality += score;
+                } else {
+                    dimensions.social += score;
+                }
+
+                total += score;
+            });
+
+            return { total, dimensions };
+        }
+
+        // 新增评价生成函数
+        function generateEvaluations(scores) {
+            return {
+                total: getTotalEvaluation(scores.total),
+                command: getCommandEvaluation(scores.dimensions.command),
+                independence: getIndependenceEvaluation(scores.dimensions.independence),
+                personality: getPersonalityEvaluation(scores.dimensions.personality),
+                social: getSocialEvaluation(scores.dimensions.social)
+            };
+        }
+
+        function getTotalEvaluation(score) {
+            if (score >= 100) return { text: '较优', class: 'excellent' };
+            if (score >= 90) return { text: '良好', class: 'good' };
+            if (score >= 80) return { text: '一般', class: 'normal' };
+            if (score >= 70) return { text: '较差', class: 'poor' };
+            return { text: '缺乏', class: 'weak' };
+        }
+
+        function getCommandEvaluation(score) {
+            if (score >= 15) return { text: '较强', class: 'excellent' };
+            if (score >= 11) return { text: '一般', class: 'normal' };
+            return { text: '较差', class: 'poor' };
+        }
+        function getIndependenceEvaluation(score) {
+            if (score >= 15) return { text: '较强', class: 'excellent' };
+            if (score >= 11) return { text: '一般', class: 'normal' };
+            return { text: '较差', class: 'poor' };
+        }
+        function getPersonalityEvaluation(score) {
+            if (score >= 30) return { text: '外向', class: 'excellent' };
+            if (score >= 21) return { text: '中性倾向', class: 'normal' };
+            return { text: '内向', class: 'poor' };
+        }
+        function getSocialEvaluation(score) {
+            if (score >= 34) return { text: '极强', class: 'excellent' };
+            if (score >= 30) return { text: '较强', class: 'good' };
+            if (score >= 26) return { text: '一般', class: 'normal' };
+            if (score >= 22) return { text: '较弱', class: 'poor' };
+            return { text: '极弱', class: 'weak' };
+        }
+
+        // 完善提交函数
+        function submitAnswers() {
+            const staffId = document.getElementById('staffId').value;
+
+            // 加强工号验证
+            if (!/^\d{4}$/.test(staffId)) {
+                alert('请输入4位数字工号');
+                return false; // 阻止继续执行
+            }
+
+
+            const scores = calculateScores();
+            const evaluations = generateEvaluations(scores);
+
+            // 隐藏题目和弹窗
+            document.getElementById('questions').style.display = 'none';
+            document.getElementById('submitButton').style.display = 'none';
+            document.getElementById('modal').style.display = 'none';
+            document.getElementById('headerText').style.display = 'none';
+
+            // 显示结果
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.style.display = 'block';
+
+            // 填充数据
+            document.getElementById('totalScore').textContent = scores.total;
+            document.getElementById('commandScore').textContent = scores.dimensions.command;
+            document.getElementById('independenceScore').textContent = scores.dimensions.independence;
+            document.getElementById('personalityScore').textContent = scores.dimensions.personality;
+            document.getElementById('socialScore').textContent = scores.dimensions.social;
+
+            // 设置评价样式
+            setEvaluationStyle('totalEvaluation', evaluations.total);
+            setEvaluationStyle('commandEvaluation', evaluations.command);
+            setEvaluationStyle('independenceEvaluation', evaluations.independence);
+            setEvaluationStyle('personalityEvaluation', evaluations.personality);
+            setEvaluationStyle('socialEvaluation', evaluations.social);
+
+            document.getElementById('modal').style.display = 'none'; // 关闭弹窗
+        }
+
+
+        function setEvaluationStyle(elementId, evaluation) {
+            const element = document.getElementById(elementId);
+            element.textContent = evaluation.text;
+            element.className = `evaluation ${evaluation.class}`;
+        }
+
+        // 添加弹窗关闭功能
+        document.getElementById('modal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+
+        window.onload = renderQuestions;
+    </script>
+</body>
+
+</html>
