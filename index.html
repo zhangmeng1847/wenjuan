@@ -201,6 +201,18 @@
             font-size: 18px;
             font-weight: bold;
         }
+
+        .score-description-text {
+            font-size: 14px;
+            /* 字体稍小一号 */
+            line-height: 1.8;
+            /* 行间距设置大一点 */
+        }
+
+        .option-label {
+            margin-right: 40px;
+            /* 增加间距 */
+        }
     </style>
 </head>
 
@@ -223,33 +235,48 @@
     <!-- 新增结果容器 -->
     <div class="result-container" id="resultContainer">
         <div class="score-card total-score">
-            <div class="score-label">综合管理潜能得分</div>
+            <div class="score-label">综合管理潜能得分（满分120分）</div>
             <div class="score-value" id="totalScore">0</div>
             <div class="evaluation" id="totalEvaluation"></div>
+            <div class="score-description" id="totalDescription">
+                <div class="score-description-text"></div>
+            </div>
         </div>
 
         <div class="score-card dimension-score">
-            <div class="score-label">🗣️ 指挥他人能力</div>
+            <div class="score-label">🗣️ 指挥他人能力（满分20分）</div>
             <div class="score-value" id="commandScore">0</div>
             <div class="evaluation" id="commandEvaluation"></div>
+            <div class="score-description" id="commandDescription">
+                <div class="score-description-text"></div>
+            </div>
         </div>
 
         <div class="score-card dimension-score">
-            <div class="score-label">🌟 独立性</div>
+            <div class="score-label">🌟 独立性（满分20分）</div>
             <div class="score-value" id="independenceScore">0</div>
             <div class="evaluation" id="independenceEvaluation"></div>
+            <div class="score-description" id="independenceDescription">
+                <div class="score-description-text"></div>
+            </div>
         </div>
 
         <div class="score-card dimension-score">
-            <div class="score-label">😊 性格倾向</div>
+            <div class="score-label">😊 性格倾向（满分40分）</div>
             <div class="score-value" id="personalityScore">0</div>
             <div class="evaluation" id="personalityEvaluation"></div>
+            <div class="score-description" id="personalityDescription">
+                <div class="score-description-text"></div>
+            </div>
         </div>
 
         <div class="score-card dimension-score">
-            <div class="score-label">🤝 社会性反应</div>
+            <div class="score-label">🤝 社会性反应（满分40分）</div>
             <div class="score-value" id="socialScore">0</div>
             <div class="evaluation" id="socialEvaluation"></div>
+            <div class="score-description" id="socialDescription">
+                <div class="score-description-text"></div>
+            </div>
         </div>
     </div>
 
@@ -325,12 +352,13 @@
                 const div = document.createElement('div');
                 div.className = 'question';
                 div.innerHTML = `
-                    <div>${q.id}. ${q.text}</div>
-                    <div class="options">
-                        <label><input type="radio" name="q${q.id}" value="yes"> 是</label>
-                        <label><input type="radio" name="q${q.id}" value="no"> 否</label>
-                    </div>
-                `;
+            <div>${q.id}. ${q.text}</div>
+            <br>
+            <div class="options">
+                <label class="option-label"><input type="radio" name="q${q.id}" value="yes"> 是</label>
+                <label class="option-label"><input type="radio" name="q${q.id}" value="no"> 否</label>
+            </div>
+        `;
                 container.appendChild(div);
             });
         }
@@ -478,6 +506,13 @@
             setEvaluationStyle('independenceEvaluation', evaluations.independence);
             setEvaluationStyle('personalityEvaluation', evaluations.personality);
             setEvaluationStyle('socialEvaluation', evaluations.social);
+
+            // 设置描述文本
+            document.querySelector('#totalDescription .score-description-text').innerHTML = ` <br>100分以上：较优 <br> 90~99分：良好<br>80~89分：一般<br>70~79分：较差<br>69分以下：缺乏`;
+            document.querySelector('#commandDescription .score-description-text').innerHTML = ` <br>15分以上：较强<br>11~14分：一般<br>10分以下：较差`;
+            document.querySelector('#independenceDescription .score-description-text').innerHTML = ` <br>15分以上：较强<br>11~14分：一般<br>10分以下：较差`;
+            document.querySelector('#personalityDescription .score-description-text').innerHTML = ` <br>30分以上：外向<br>21~29分：中性倾向<br>20分以下：内向`;
+            document.querySelector('#socialDescription .score-description-text').innerHTML = ` <br>34分以上：极强<br>30~33分：较强<br>26~29分：一般<br>22~25分：较弱<br>21分以下：极弱`;
 
             document.getElementById('modal').style.display = 'none'; // 关闭弹窗
         }
